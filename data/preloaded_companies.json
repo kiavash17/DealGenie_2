@@ -1,0 +1,53 @@
+[
+    {
+      "company_name": "Mistral",
+      "deck_url": "https://bestpitchdeck.com/mistral",
+      "sector": "AI Infrastructure"
+    },
+    {
+      "company_name": "OpenSea",
+      "deck_url": "https://bestpitchdeck.com/opensea",
+      "sector": "NFT Marketplace"
+    },
+    {
+      "company_name": "Rippling",
+      "deck_url": "https://bestpitchdeck.com/rippling",
+      "sector": "HR Tech / SaaS"
+    },
+    {
+      "company_name": "Notion",
+      "deck_url": "https://bestpitchdeck.com/notion",
+      "sector": "Productivity Software"
+    },
+    {
+      "company_name": "Postmates",
+      "deck_url": "https://bestpitchdeck.com/postmates",
+      "sector": "Delivery / Logistics"
+    },
+    {
+      "company_name": "Coinbase",
+      "deck_url": "https://bestpitchdeck.com/coinbase",
+      "sector": "Crypto Exchange"
+    },
+    {
+      "company_name": "Intercom",
+      "deck_url": "https://bestpitchdeck.com/intercom",
+      "sector": "Customer Communication SaaS"
+    },
+    {
+      "company_name": "Loom",
+      "deck_url": "https://bestpitchdeck.com/loom",
+      "sector": "Video Messaging / Communication"
+    },
+    {
+      "company_name": "WeWork",
+      "deck_url": "https://bestpitchdeck.com/wework",
+      "sector": "Coworking / Real Estate"
+    },
+    {
+      "company_name": "Dropbox",
+      "deck_url": "https://bestpitchdeck.com/dropbox",
+      "sector": "Cloud Storage"
+    }
+  ]
+  
