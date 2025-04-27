@@ -1,0 +1,107 @@
+[
+  {
+    "partner_id": "mar",
+    "name": "Mar Hershenson",
+    "title": "Co-Founder & Managing Partner",
+    "bio": "Mar Hershenson is the Co-Founder and Managing Partner at Pear VC. Prior to founding Pear, Mar co-founded three companies: Revel Touch (e-commerce platform), Sabio Labs (web-based mobile semiconductor development platform, acquired by Magma Design Automation), and Barcelona Design (analog design automation company). Mar has a PhD in Electrical Engineering from Stanford University.",
+    "expertise": ["Hardware", "Consumer", "Enterprise", "Deep Tech", "E-commerce"],
+    "investment_philosophy": "Building companies from scratch with strong technical insights and market vision.",
+    "investment_preferences": {
+      "sectors": ["AI Infrastructure", "Enterprise SaaS", "Hardware", "Consumer Tech", "E-commerce"],
+      "stage": ["Pre-seed", "Seed", "Series A"],
+      "check_size": "$500K - $3M",
+      "founder_attributes": ["Technical background", "Domain expertise", "Grit", "Vision"]
+    },
+    "past_investments": ["DoorDash", "Gusto", "Xapo", "Branch"]
+  },
+  {
+    "partner_id": "pejman",
+    "name": "Pejman Nozad",
+    "title": "Co-Founder & Managing Partner",
+    "bio": "Pejman Nozad is the Co-Founder and Managing Partner at Pear VC. Pejman is known for his remarkable journey from rug dealer to venture capitalist. His investment portfolio includes many successful companies like Dropbox, Lending Club, Zoosk, and many others. He has a unique talent for identifying exceptional founders early in their journey.",
+    "expertise": ["Marketplaces", "SaaS", "Consumer", "FinTech"],
+    "investment_philosophy": "Betting on exceptional founders with strong drive and unique insights.",
+    "investment_preferences": {
+      "sectors": ["Marketplaces", "Consumer Tech", "FinTech", "SaaS", "Health Tech"],
+      "stage": ["Pre-seed", "Seed"],
+      "check_size": "$500K - $2M",
+      "founder_attributes": ["Passion", "Resilience", "Unique insight", "Strong team dynamics"]
+    },
+    "past_investments": ["Dropbox", "Lending Club", "Guardant Health", "Applovin"]
+  },
+  {
+    "partner_id": "ajay",
+    "name": "Ajay Kamat",
+    "title": "Managing Partner",
+    "bio": "Ajay Kamat is a Managing Partner at Pear VC. Prior to joining Pear, Ajay was the CEO of Wedding Party (acquired by Instacart). Ajay focuses on consumer, marketplace, and SaaS investments. He holds degrees from the University of Michigan and the Stanford Graduate School of Business.",
+    "expertise": ["Consumer", "Marketplaces", "SaaS", "Social"],
+    "investment_philosophy": "Investing in founders who deeply understand their customers and are building products people love.",
+    "investment_preferences": {
+      "sectors": ["Consumer Tech", "Marketplaces", "SaaS", "Social Media", "Video Messaging"],
+      "stage": ["Pre-seed", "Seed"],
+      "check_size": "$500K - $2M",
+      "founder_attributes": ["Customer empathy", "Product sense", "Market understanding", "Agility"]
+    },
+    "past_investments": ["Loom", "Path", "Ladder", "Menlo Security"]
+  },
+  {
+    "partner_id": "nish",
+    "name": "Nishika Gupta",
+    "title": "Partner",
+    "bio": "Nishika Gupta is a Partner at Pear VC focusing on enterprise software, AI, and infrastructure investments. Before Pear, Nishika was at Madrona Venture Group where she focused on early stage B2B investments. She has a technical background with experience at Microsoft and holds a BS in Computer Science from UT Austin and an MBA from Stanford GSB.",
+    "expertise": ["AI", "Enterprise Software", "Infrastructure", "Cloud"],
+    "investment_philosophy": "Backing technical founders building deep technology companies with strong moats.",
+    "investment_preferences": {
+      "sectors": ["AI Infrastructure", "Enterprise SaaS", "Cloud Storage", "Developer Tools", "Productivity Software"],
+      "stage": ["Pre-seed", "Seed"],
+      "check_size": "$500K - $2M",
+      "founder_attributes": ["Technical depth", "Market insight", "Ability to attract talent"]
+    },
+    "past_investments": ["Notion", "Scale AI", "Mux"]
+  },
+  {
+    "partner_id": "eric",
+    "name": "Eric Feng",
+    "title": "Managing Partner",
+    "bio": "Eric Feng is a Managing Partner at Pear VC. He was previously CTO at Flipboard and Hulu, and a General Partner at Kleiner Perkins. Eric has founded multiple companies including Packagd (acquired by Facebook) and Erly (acquired by Airtime). He has a BS in Computer Engineering from the University of Texas at Austin.",
+    "expertise": ["Consumer Tech", "Media", "Social", "Crypto"],
+    "investment_philosophy": "Seeking founders with unique insights who are reshaping how we live, work, and play.",
+    "investment_preferences": {
+      "sectors": ["Consumer Tech", "Crypto Exchange", "NFT Marketplace", "Media", "Social Platforms"],
+      "stage": ["Seed", "Series A"],
+      "check_size": "$1M - $3M",
+      "founder_attributes": ["Technical excellence", "Product obsession", "Consumer understanding"]
+    },
+    "past_investments": ["Coinbase", "OpenSea", "Discord", "Robinhood"]
+  },
+  {
+    "partner_id": "vivian",
+    "name": "Vivian Wu",
+    "title": "Partner",
+    "bio": "Vivian Wu is a Partner at Pear VC focusing on healthcare and biotechnology investments. Before joining Pear, Vivian led investments at the Bill & Melinda Gates Foundation and was at Longitude Capital. She holds an MBA from Harvard Business School and a BA from UC Berkeley.",
+    "expertise": ["Healthcare", "Biotech", "Digital Health", "Life Sciences"],
+    "investment_philosophy": "Investing in transformative healthcare technologies that improve patient outcomes.",
+    "investment_preferences": {
+      "sectors": ["Healthcare", "Biotech", "Digital Health", "Life Sciences"],
+      "stage": ["Seed", "Series A"],
+      "check_size": "$1M - $3M",
+      "founder_attributes": ["Scientific expertise", "Clinical insight", "Regulatory understanding"]
+    },
+    "past_investments": ["Color Genomics", "Freenome", "Omada Health"]
+  },
+  {
+    "partner_id": "roshan",
+    "name": "Roshan Sood",
+    "title": "Partner",
+    "bio": "Roshan Sood is a Partner at Pear VC focusing on B2B and enterprise software investments. Previously, Roshan was an investor at Bessemer Venture Partners and worked at Salesforce. He has a BS in Computer Science from Stanford University and an MBA from Harvard Business School.",
+    "expertise": ["Enterprise SaaS", "B2B", "Security", "HR Tech"],
+    "investment_philosophy": "Backing founders who transform how businesses operate through software.",
+    "investment_preferences": {
+      "sectors": ["HR Tech / SaaS", "Customer Communication SaaS", "Enterprise Security", "B2B Marketplaces"],
+      "stage": ["Seed", "Series A"],
+      "check_size": "$1M - $3M",
+      "founder_attributes": ["Enterprise experience", "Sales acumen", "Product-market understanding"]
+    },
+    "past_investments": ["Rippling", "Intercom", "Verkada", "Clari"]
+  }
+]

@@ -5,14 +5,20 @@ import requests
 import json
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
 # Load preloaded companies
 with open("../data/preloaded_companies.json", "r") as f:
     preloaded_companies = json.load(f)
 
+# Load Pear VC partners
+with open("../data/pear_partners.json", "r") as f:
+    pear_partners = json.load(f)
+
 # Page configuration
 st.set_page_config(
-    page_title="DealCraft Dashboard",
+    page_title="Pear VC Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -104,6 +110,25 @@ st.markdown("""
         font-size: 0.8rem;
         margin-bottom: 1rem;
     }
+    .match-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    .match-high {
+        background-color: #d4edda;
+        color: #28a745;
+    }
+    .match-medium {
+        background-color: #fff3cd;
+        color: #ffc107;
+    }
+    .match-low {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
     .score-good {
         color: #27AE60;
     }
@@ -112,6 +137,29 @@ st.markdown("""
     }
     .score-poor {
         color: #E74C3C;
+    }
+    .partner-card {
+        padding: 1.5rem;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        border-left: 5px solid #3498DB;
+    }
+    .match-card {
+        padding: 1.5rem;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+        border-left: 5px solid;
+    }
+    .match-explanation {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-size: 0.9rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -125,15 +173,139 @@ if 'selected_company' not in st.session_state:
     st.session_state.selected_company = None
 if 'show_analysis' not in st.session_state:
     st.session_state.show_analysis = False
+if 'selected_partner' not in st.session_state:
+    st.session_state.selected_partner = None
+
+# Function to calculate match score between a partner and company
+def calculate_match_score(partner, company):
+    """Calculate match score between a partner and a company"""
+    # Default values for company data
+    company_sector = company.get("sector", "")
+    company_stage = "Seed"  # Default assumption
+    
+    # Initialize scores
+    sector_match = 0.0
+    stage_match = 0.0
+    expertise_match = 0.0
+    
+    # Sector match (0-1)
+    if company_sector in partner["investment_preferences"]["sectors"]:
+        sector_match = 1.0
+    else:
+        # Check for partial matches
+        for preferred_sector in partner["investment_preferences"]["sectors"]:
+            if preferred_sector in company_sector:
+                sector_match = 0.8
+                break
+            # Check if company sector includes partner's expertise areas
+            for expertise in partner["expertise"]:
+                if expertise in company_sector:
+                    sector_match = 0.6
+                    break
+    
+    # Stage match (0-1)
+    if company_stage in partner["investment_preferences"]["stage"]:
+        stage_match = 1.0
+    else:
+        stage_match = 0.0
+    
+    # Expertise match based on partner's expertise areas
+    for expertise in partner["expertise"]:
+        if expertise in company_sector:
+            expertise_match = 1.0
+            break
+        # Partial match
+        elif any(expertise.lower() in sector.lower() for sector in [company_sector]):
+            expertise_match = 0.7
+            break
+    
+    # Calculate overall score (weighted average)
+    founder_match = 0.5  # Default to medium
+    overall_score = (sector_match * 0.4) + (expertise_match * 0.3) + (stage_match * 0.2) + (founder_match * 0.1)
+    
+    return {
+        "overall_score": overall_score,
+        "sector_match": sector_match,
+        "stage_match": stage_match,
+        "expertise_match": expertise_match,
+        "founder_match": founder_match
+    }
+
+# Function to get top matching partners for a company
+def get_matching_partners(company):
+    """Get top matching partners for a company"""
+    matches = []
+    
+    for partner in pear_partners:
+        score = calculate_match_score(partner, company)
+        matches.append({
+            "partner": partner,
+            "match_score": score
+        })
+    
+    # Sort by overall score, highest first
+    matches.sort(key=lambda x: x["match_score"]["overall_score"], reverse=True)
+    return matches
+
+# Function to create match explanation
+def generate_match_explanation(partner, company, match_score):
+    """Generate explanation for match score"""
+    explanation = f"Match analysis for {partner['name']} and {company['company_name']}:\n"
+    
+    # Sector match
+    sector_match = match_score["sector_match"]
+    explanation += f"- Sector match ({sector_match*10:.1f}/10): "
+    
+    if sector_match > 0.8:
+        explanation += f"{company['sector']} is directly in {partner['name']}'s investment focus.\n"
+    elif sector_match > 0.5:
+        explanation += f"{company['sector']} is related to {partner['name']}'s investment areas.\n"
+    else:
+        explanation += f"{company['sector']} is outside {partner['name']}'s typical investment focus.\n"
+    
+    # Expertise match
+    expertise_match = match_score["expertise_match"]
+    explanation += f"- Expertise match ({expertise_match*10:.1f}/10): "
+    if expertise_match > 0.8:
+        explanation += f"{partner['name']} has strong expertise in {company['sector']}.\n"
+    elif expertise_match > 0.5:
+        explanation += f"{partner['name']} has some relevant expertise for {company['sector']}.\n"
+    else:
+        explanation += f"{partner['name']}'s expertise doesn't strongly align with {company['sector']}.\n"
+    
+    # Stage match
+    stage_match = match_score["stage_match"]
+    company_stage = "Seed"  # Default assumption
+    explanation += f"- Stage match ({stage_match*10:.1f}/10): "
+    if stage_match > 0.8:
+        explanation += f"{company_stage} is a preferred investment stage for {partner['name']}.\n"
+    else:
+        explanation += f"{company_stage} is not {partner['name']}'s typical investment stage.\n"
+    
+    return explanation
+
+# Function to get a matrix of all match scores
+def get_all_match_scores():
+    """Get a matrix of all partner-company matches"""
+    all_scores = {}
+    
+    for company in preloaded_companies:
+        company_scores = {}
+        for partner in pear_partners:
+            score = calculate_match_score(partner, company)
+            company_scores[partner["partner_id"]] = score["overall_score"]
+        all_scores[company["company_name"]] = company_scores
+    
+    return all_scores
 
 # Sidebar
 with st.sidebar:
-    st.markdown('<div class="sidebar-header">DealCraft VC Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-header">Pear VC Dashboard</div>', unsafe_allow_html=True)
     
     # Navigation
     page = st.radio(
         "Navigation",
-        ["Company Analysis", "Portfolio Overview"]
+        ["Company Analysis", "Partner Profiles", "Match Overview"]
     )
     
     # Filters 
@@ -144,13 +316,29 @@ with st.sidebar:
         default=[]
     )
     
+    # Partner selection in sidebar
+    partner_options = [""] + [partner["name"] for partner in pear_partners]
+    selected_partner_name = st.selectbox(
+        "Partner View",
+        partner_options,
+        index=0,
+        format_func=lambda x: x if x else "Select Partner..."
+    )
+    
+    if selected_partner_name:
+        st.session_state.selected_partner = next((p for p in pear_partners if p["name"] == selected_partner_name), None)
+    
     # Profile section
     st.markdown("---")
     st.markdown("### User Profile")
-    st.markdown("Jane Smith")
-    st.markdown("Partner at Acme Ventures")
+    if st.session_state.selected_partner:
+        st.markdown(f"**{st.session_state.selected_partner['name']}**")
+        st.markdown(f"{st.session_state.selected_partner['title']}")
+    else:
+        st.markdown("Mar Hershenson")
+        st.markdown("Co-Founder at Pear VC")
     st.markdown("---")
-    st.markdown("© 2025 DealCraft")
+    st.markdown("© 2025 Pear VC")
 
 # Main content based on selected page
 if page == "Company Analysis":
@@ -179,16 +367,16 @@ if page == "Company Analysis":
     with col3:
         st.markdown("""
         <div class="metric-card">
-            <div class="metric-value">2.5 min</div>
-            <div class="metric-label">Avg. Analysis Time</div>
+            <div class="metric-value">{}</div>
+            <div class="metric-label">Pear Partners</div>
         </div>
-        """, unsafe_allow_html=True)
+        """.format(len(pear_partners)), unsafe_allow_html=True)
     
     # Company selection section
     st.markdown("""
     <div class="dashboard-card">
         <h3>Select Startup to Analyze</h3>
-        <p>Choose a startup from the dropdown below to generate a detailed investment memo and scorecard.</p>
+        <p>Choose a startup from the dropdown below to generate a detailed investment memo and partner match.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -217,10 +405,22 @@ if page == "Company Analysis":
             st.session_state.selected_company = selected_company
             st.session_state.show_analysis = True
             
-            # Display company info
+            # Get partner matches for this company
+            matches = get_matching_partners(selected_company)
+            top_matches = matches[:3]  # Top 3 matches
+            
+            # Get best matching partner
+            best_match = matches[0]
+            match_score = best_match["match_score"]["overall_score"] * 10
+            match_class = "match-high" if match_score >= 7 else "match-medium" if match_score >= 5 else "match-low"
+            match_label = f"Best Partner: {best_match['partner']['name']} ({match_score:.1f}/10)"
+            
+            # Display company info with partner match
             st.markdown(f"""
             <div class="company-info">
-                <h3>{selected_company["company_name"]}</h3>
+                <h3>{selected_company["company_name"]} 
+                    <span class="match-badge {match_class}">{match_label}</span>
+                </h3>
                 <div class="sector-badge">{selected_company.get("sector", "Technology")}</div>
                 <p><strong>Pitch Deck:</strong> <a href="{selected_company.get("deck_url", "#")}" target="_blank">View Deck</a></p>
             </div>
@@ -237,8 +437,8 @@ if page == "Company Analysis":
                 "fundraising_ask": "$5M seed round"
             }
             
-            # Show tabs for company details and analysis
-            tabs = st.tabs(["Company Details", "Investment Memo", "Scorecard"])
+            # Show tabs for company details, memo, scorecard, and partner matches
+            tabs = st.tabs(["Company Details", "Investment Memo", "Scorecard", "Partner Matches"])
             
             with tabs[0]:
                 col1, col2 = st.columns(2)
@@ -437,52 +637,282 @@ We recommend proceeding with the investment in {selected_company['company_name']
                 else:
                     st.info("Generate the investment memo first to see the scorecard.")
 
-elif page == "Portfolio Overview":
+            with tabs[3]:
+                st.markdown("### Partner Match Analysis")
+                st.markdown("Which Pear VC partners would be the best leads for this company?")
+                
+                # Display top 3 partner matches
+                for i, match in enumerate(top_matches):
+                    partner = match["partner"]
+                    score = match["match_score"]
+                    overall_score = score["overall_score"] * 10
+                    
+                    # Determine match color based on score
+                    if overall_score >= 7:
+                        border_color = "#27AE60"  # Green for high match
+                        score_color = "green"
+                    elif overall_score >= 5:
+                        border_color = "#F39C12"  # Orange for medium match
+                        score_color = "orange"
+                    else:
+                        border_color = "#E74C3C"  # Red for low match
+                        score_color = "red"
+                    
+                    # Generate match explanation
+                    explanation = generate_match_explanation(partner, selected_company, score)
+                    
+                    # Display match card
+                    st.markdown(f"""
+                    <div class="match-card" style="border-left-color: {border_color}">
+                        <h4>{partner["name"]} - 
+                            <span style="color: {score_color}">{overall_score:.1f}/10 Match</span>
+                        </h4>
+                        <p><strong>{partner["title"]}</strong></p>
+                        <p>Expertise: {", ".join(partner["expertise"])}</p>
+                        <p>Investment Philosophy: {partner["investment_philosophy"]}</p>
+                        <p>Past Investments: {", ".join(partner["past_investments"][:3])}...</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Score breakdown
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        sector_score = score["sector_match"] * 10
+                        st.markdown(f"**Sector Match:** <span style='color:{score_color}'>{sector_score:.1f}/10</span>", unsafe_allow_html=True)
+                    with col2:
+                        expertise_score = score["expertise_match"] * 10
+                        st.markdown(f"**Expertise Match:** <span style='color:{score_color}'>{expertise_score:.1f}/10</span>", unsafe_allow_html=True)
+                    with col3:
+                        stage_score = score["stage_match"] * 10
+                        st.markdown(f"**Stage Match:** <span style='color:{score_color}'>{stage_score:.1f}/10</span>", unsafe_allow_html=True)
+                    with col4:
+                        founder_score = score["founder_match"] * 10
+                        st.markdown(f"**Founder Fit:** <span style='color:{score_color}'>{founder_score:.1f}/10</span>", unsafe_allow_html=True)
+                    
+                    # Match explanation
+                    st.markdown(f"""
+                    <div class="match-explanation">
+                        {explanation.replace("\n", "<br>")}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown("---")
+
+elif page == "Partner Profiles":
     # Header
-    st.markdown('<div class="main-header">💼 Portfolio Overview</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">👥 Pear VC Partner Profiles</div>', unsafe_allow_html=True)
     
-    # Sector distribution chart
+    # Partner overview
     st.markdown("""
     <div class="dashboard-card">
-        <h3>Sector Distribution</h3>
+        <h3>Pear VC Partners</h3>
+        <p>View detailed profiles and investment focus areas for all Pear VC partners.</p>
     </div>
     """, unsafe_allow_html=True)
     
-    sector_counts = pd.DataFrame({
-        "Sector": [company.get("sector", "Unknown") for company in preloaded_companies]
-    }).value_counts("Sector").reset_index()
-    sector_counts.columns = ["Sector", "Count"]
+    # Partner profiles
+    for partner in pear_partners:
+        with st.expander(f"{partner['name']} - {partner['title']}"):
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                st.markdown(f"### {partner['name']}")
+                st.markdown(f"**{partner['title']}**")
+                st.markdown(partner['bio'])
+                
+                st.markdown("### Investment Philosophy")
+                st.write(partner['investment_philosophy'])
+                
+                st.markdown("### Areas of Expertise")
+                expertise_list = ", ".join(partner['expertise'])
+                st.write(expertise_list)
+                
+                st.markdown("### Notable Investments")
+                investment_list = ", ".join(partner['past_investments'])
+                st.write(investment_list)
+            
+            with col2:
+                st.markdown("### Investment Preferences")
+                st.markdown("**Sectors of Interest:**")
+                for sector in partner['investment_preferences']['sectors']:
+                    st.markdown(f"- {sector}")
+                
+                st.markdown("**Preferred Stages:**")
+                for stage in partner['investment_preferences']['stage']:
+                    st.markdown(f"- {stage}")
+                
+                st.markdown(f"**Check Size:** {partner['investment_preferences']['check_size']}")
+                
+                st.markdown("**Founder Attributes Valued:**")
+                for attr in partner['investment_preferences']['founder_attributes']:
+                    st.markdown(f"- {attr}")
+        
+        # Best company matches for this partner
+        st.markdown("#### Top Company Matches")
+        
+        # Calculate matches for this partner
+        partner_matches = []
+        for company in preloaded_companies:
+            score = calculate_match_score(partner, company)
+            partner_matches.append({
+                "company": company,
+                "score": score["overall_score"]
+            })
+        
+        # Sort and get top 3
+        partner_matches.sort(key=lambda x: x["score"], reverse=True)
+        top_matches = partner_matches[:3]
+        
+        # Display as small cards in a row
+        cols = st.columns(3)
+        for i, match in enumerate(top_matches):
+            with cols[i]:
+                company = match["company"]
+                score = match["score"] * 10
+                score_color = "green" if score >= 7 else "orange" if score >= 5 else "red"
+                
+                st.markdown(f"""
+                <div style="background-color: white; padding: 10px; border-radius: 5px; border-left: 3px solid {score_color};">
+                    <h5>{company['company_name']}</h5>
+                    <div class="sector-badge">{company.get('sector', 'Technology')}</div>
+                    <p><strong>Match Score:</strong> <span style="color: {score_color}">{score:.1f}/10</span></p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+
+elif page == "Match Overview":
+    # Header
+    st.markdown('<div class="main-header">🔍 Company-Partner Match Overview</div>', unsafe_allow_html=True)
+    
+    # Overview
+    st.markdown("""
+    <div class="dashboard-card">
+        <h3>Partner-Company Match Matrix</h3>
+        <p>A comprehensive view of how well each company matches with each Pear VC partner.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Calculate all match scores
+    all_scores = get_all_match_scores()
+    
+    # Create a matrix for heatmap
+    partner_ids = [p["partner_id"] for p in pear_partners]
+    partner_names = [p["name"] for p in pear_partners]
+    companies = [c["company_name"] for c in preloaded_companies]
+    
+    # Initialize matrix with zeros
+    match_matrix = np.zeros((len(companies), len(partner_ids)))
+    
+    # Fill matrix with match scores
+    for i, company in enumerate(companies):
+        for j, partner_id in enumerate(partner_ids):
+            if company in all_scores and partner_id in all_scores[company]:
+                match_matrix[i, j] = all_scores[company][partner_id] * 10  # Scale to 0-10
+    
+    # Create heatmap
+    fig = go.Figure(data=go.Heatmap(
+        z=match_matrix,
+        x=partner_names,
+        y=companies,
+        colorscale='Blues',
+        colorbar=dict(title="Match Score (0-10)"),
+        hoverongaps=False,
+        hovertemplate='Company: %{y}<br>Partner: %{x}<br>Match Score: %{z:.1f}/10<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        title="Company-Partner Match Matrix",
+        xaxis_title="Pear VC Partners",
+        yaxis_title="Companies",
+        height=600,
+        margin=dict(l=50, r=50, t=50, b=50),
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show best matches for each company
+    st.markdown("### Best Partner Match by Company")
+    
+    # Create a table of best matches
+    best_matches_data = []
+    for company in preloaded_companies:
+        company_name = company["company_name"]
+        company_scores = all_scores.get(company_name, {})
+        if company_scores:
+            best_partner_id = max(company_scores, key=company_scores.get)
+            best_partner = next((p for p in pear_partners if p["partner_id"] == best_partner_id), None)
+            if best_partner:
+                best_matches_data.append({
+                    "Company": company_name,
+                    "Sector": company.get("sector", "Unknown"),
+                    "Best Match Partner": best_partner["name"],
+                    "Match Score": f"{company_scores[best_partner_id] * 10:.1f}/10"
+                })
+    
+    if best_matches_data:
+        best_matches_df = pd.DataFrame(best_matches_data)
+        st.dataframe(best_matches_df, use_container_width=True, hide_index=True)
+    
+    # Show overall partnership statistics
+    st.markdown("### Partnership Overview")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        fig = px.pie(sector_counts, values='Count', names='Sector', 
-                      color_discrete_sequence=px.colors.sequential.Blues,
-                      hole=0.4)
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        fig.update_layout(margin=dict(t=30, b=30, l=30, r=30))
-        st.plotly_chart(fig, use_container_width=True)
+        # Count high matches (>7/10) per partner
+        partner_match_counts = {}
+        for company in preloaded_companies:
+            company_name = company["company_name"]
+            company_scores = all_scores.get(company_name, {})
+            for partner_id, score in company_scores.items():
+                if score * 10 >= 7:  # High match
+                    partner_match_counts[partner_id] = partner_match_counts.get(partner_id, 0) + 1
+        
+        # Create chart
+        partner_match_df = pd.DataFrame([
+            {"Partner": next((p["name"] for p in pear_partners if p["partner_id"] == partner_id), partner_id), 
+             "High Match Count": count}
+            for partner_id, count in partner_match_counts.items()
+        ])
+        
+        if not partner_match_df.empty:
+            partner_match_df = partner_match_df.sort_values("High Match Count", ascending=False)
+            
+            fig = px.bar(partner_match_df, x="Partner", y="High Match Count",
+                         title="Number of High-Quality Matches (>7/10) by Partner",
+                         color="High Match Count", 
+                         color_continuous_scale=px.colors.sequential.Blues)
+            fig.update_layout(xaxis_tickangle=-45)
+            st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        fig = px.bar(sector_counts, x='Sector', y='Count', 
-                     color='Sector', color_discrete_sequence=px.colors.qualitative.Pastel)
-        fig.update_layout(showlegend=False, margin=dict(t=30, b=30, l=30, r=30))
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Companies table
-    st.markdown("""
-    <div class="dashboard-card">
-        <h3>All Companies</h3>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    companies_df = pd.DataFrame([
-        {
-            "Company": company["company_name"],
-            "Sector": company.get("sector", "Unknown"),
-            "Deck": company.get("deck_url", "N/A")
-        }
-        for company in preloaded_companies
-    ])
-    
-    st.dataframe(companies_df, use_container_width=True, hide_index=True)
+        # Sector coverage analysis - which sectors have the most/least partner coverage
+        sector_coverage = {}
+        for company in preloaded_companies:
+            sector = company.get("sector", "Unknown")
+            if sector not in sector_coverage:
+                sector_coverage[sector] = {"high_matches": 0, "total_partners": 0}
+            
+            # Count partners with good match scores for this sector
+            company_scores = all_scores.get(company["company_name"], {})
+            high_match_partners = sum(1 for score in company_scores.values() if score * 10 >= 7)
+            sector_coverage[sector]["high_matches"] += high_match_partners
+            sector_coverage[sector]["total_partners"] += len(company_scores)
+        
+        # Calculate average high match percentage per sector
+        sector_coverage_df = pd.DataFrame([
+            {"Sector": sector, 
+             "Coverage Percentage": (data["high_matches"] / data["total_partners"] * 100) if data["total_partners"] > 0 else 0}
+            for sector, data in sector_coverage.items()
+        ])
+        
+        if not sector_coverage_df.empty:
+            sector_coverage_df = sector_coverage_df.sort_values("Coverage Percentage", ascending=False)
+            
+            fig = px.bar(sector_coverage_df, x="Sector", y="Coverage Percentage",
+                         title="Partner Coverage by Sector (% of High-Quality Matches)",
+                         color="Coverage Percentage", 
+                         color_continuous_scale=px.colors.sequential.Blues)
+            fig.update_layout(xaxis_tickangle=-45, yaxis_title="% of Potential Matches > 7/10")
+            st.plotly_chart(fig, use_container_width=True)
